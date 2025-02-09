@@ -79,9 +79,8 @@ warn() {
 usage() {
   cat <<EOS
 Homebrew Installer
-Usage: [HOMEBREW_INSTALL_PREFIX] [NONINTERACTIVE=1] [CI=1] install.sh [options]
+Usage: [NONINTERACTIVE=1] [CI=1] install.sh [options]
     -h, --help       Display this message.
-    HOMEBREW_INSTALL_PREFIX   Specify where to install Homebrew. If unspecified, the defaults will be used.
     NONINTERACTIVE   Install without prompting for user input
     CI               Install in CI mode (e.g. do not prompt for user input)
 EOS
@@ -130,16 +129,6 @@ then
   export USER
 fi
 
-#
-# Support the specification of a user-specified install # prefix.
-# Set a flag variable that will be referenced later to its default value.
-HOMEBREW_USERSPECIFIED_INSTALL_PREFIX=0
-if [[ -n "${HOMEBREW_INSTALL_PREFIX-}" ]]
-then
-  # A prefix got passed in, so let's set the flag.
-  HOMEBREW_USERSPECIFIED_INSTALL_PREFIX=1
-fi
-# 
 # First check OS.
 OS="$(uname)"
 if [[ "${OS}" == "Linux" ]]
@@ -152,36 +141,21 @@ else
   abort "Homebrew is only supported on macOS and Linux."
 fi
 
+# Required installation paths. To install elsewhere (which is unsupported)
+# you can untar https://github.com/Homebrew/brew/tarball/master
+# anywhere you like.
 if [[ -n "${HOMEBREW_ON_MACOS-}" ]]
 then
   UNAME_MACHINE="$(/usr/bin/uname -m)"
 
   if [[ "${UNAME_MACHINE}" == "arm64" ]]
   then
-    # On ARM macOS, this script installs to
-    # /opt/homebrew if not user-specified.
-    HOMEBREW_PREFIX_DEFAULT="/opt/homebrew"
-    if [[ "${HOMEBREW_USERSPECIFIED_INSTALL_PREFIX}" == 1 ]]
-    then
-      # The user wants to install Homebrew somewhere else entirely.
-      HOMEBREW_PREFIX="${HOMEBREW_INSTALL_PREFIX}"
-    else
-      # Use the default instead.
-      HOMEBREW_PREFIX="${HOMEBREW_PREFIX_DEFAULT}"
-    fi
+    # On ARM macOS, this script installs to /opt/homebrew only
+    HOMEBREW_PREFIX="/opt/homebrew"
     HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}"
   else
-    # On Intel macOS, this script installs to /usr/local
-    # if not user-specified.
-    HOMEBREW_PREFIX_DEFAULT="/usr/local"
-    if [[ "${HOMEBREW_USERSPECIFIED_INSTALL_PREFIX}" == 1 ]]
-    then
-      # The user wants to install Homebrew somewhere else entirely.
-      HOMEBREW_PREFIX="${HOMEBREW_INSTALL_PREFIX}"
-    else
-      # Use the default instead.
-      HOMEBREW_PREFIX="${HOMEBREW_PREFIX_DEFAULT}"
-    fi
+    # On Intel macOS, this script installs to /usr/local only
+    HOMEBREW_PREFIX="/usr/local"
     HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
   fi
   HOMEBREW_CACHE="${HOME}/Library/Caches/Homebrew"
